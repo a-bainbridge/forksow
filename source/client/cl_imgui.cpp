@@ -15,14 +15,27 @@
 static Texture atlas_texture;
 static Material atlas_material;
 
-static ImFont * AddFontAsset( StringHash path, float pixel_size ) {
+static ImFont * AddFontAsset( StringHash path, float pixel_size, const bool fallback = true ) {
 	Span< const u8 > data = AssetBinary( path );
+	ImGuiIO & io = ImGui::GetIO();
 	ImFontConfig config;
 	config.FontData = ( void * ) data.ptr;
 	config.FontDataOwnedByAtlas = false;
 	config.FontDataSize = data.n;
 	config.SizePixels = pixel_size;
-	return ImGui::GetIO().Fonts->AddFont( &config );
+	ImFont * font = io.Fonts->AddFont( &config );
+	if( fallback ) {
+		ImFontConfig default_cfg;
+		default_cfg.MergeMode = true;
+		Span< const u8 > data2 = AssetBinary( "fonts/DroidSansJapanese.ttf" );
+		default_cfg.FontData = (void *)data2.ptr;
+		default_cfg.FontDataOwnedByAtlas = false;
+		default_cfg.FontDataSize = data2.n;
+		default_cfg.SizePixels = pixel_size;
+		default_cfg.GlyphRanges = io.Fonts->GetGlyphRangesJapanese();
+		font = io.Fonts->AddFont( &default_cfg );
+	}
+	return font;
 }
 
 struct GLFWwindow;
